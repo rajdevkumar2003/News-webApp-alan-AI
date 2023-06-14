@@ -1,0 +1,32 @@
+intent('What does this app do?', 'What can I do here?',
+reply('This is a news project.'));
+
+const API_KEY = 'a6e726e763184746b150e7a5f7607a31';
+let savedArticles = [];
+
+// News by Source
+intent(`(Give me | tell me | show me) the news (from | by | on | in) $(source* .+)`, (p) => {
+let NEWS_API_URL = 'https://newsapi.org/v2/top-headlines';
+
+if(p.source.value) {
+    p.source.value=p.source.value.toLowerCase().split(" ").join("-");
+    NEWS_API_URL = `${NEWS_API_URL}?sources=${p.source.value}&apiKey=${API_KEY}`
+}
+
+api.request(NEWS_API_URL, {headers: {"user-agent": 'user agent' }}, (error, response, body) => {
+    const { totalResults, articles } = JSON.parse(body);
+    
+    if(totalResults == 0) {
+        p.play('Sorry, please try searching for news from a different source');
+        return;
+    }
+    
+    savedArticles = articles;
+    
+    p.play({ command: 'newHeadlines', articles });
+    p.play(`Here are (latest|recent) ${p.source.value} news.`);
+
+    p.play('Would you like me to read the headlines?');
+
+});
+})
